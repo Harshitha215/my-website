@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Trigger on push to the `main` branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Node.js (example for Node.js projects)
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'  # You can change the version as needed
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Build the project
+      - name: Build the project
+        run: npm run build
+
+      # Step 5: Deploy to EC2
+      - name: Deploy to EC2
+        run: |
+          echo "Deploying to EC2..."
+          ssh -i ${{ secrets.EC2_SSH_KEY }} ec2-user@${{ secrets.EC2_IP }} 'bash -s' < deploy.sh
+        env:
+          HOST: ${{ secrets.EC2_IP }}  # Your EC2 instance's IP address (stored as a GitHub secret)
+          SSH_KEY: ${{ secrets.EC2_SSH_KEY }}  # Your EC2 SSH private key (stored as a GitHub secret)
