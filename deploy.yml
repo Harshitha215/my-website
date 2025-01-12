@@ -1,0 +1,28 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Trigger this workflow on pushes to the 'main' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # This runs on an Ubuntu virtual machine
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2  # This checks out your repository's code
+
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3  # Action to add your SSH key
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_KEY }}  # Add your private SSH key to GitHub Secrets
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no ec2-user@<EC2-PUBLIC-IP> << 'EOF'
+            cd /home/ec2-user/my-website
+            git pull origin main  # Pull the latest code from GitHub
+            sudo systemctl restart nginx  # Restart Nginx to serve the new code (if using Nginx)
+          EOF
+
